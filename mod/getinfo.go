@@ -36,6 +36,11 @@ type Monitor struct {
 	Disks  diskinfos
 }
 
+type Javaproc struct {
+	Name string
+	Pid  uint64
+}
+
 //获取CPU 的简要信息
 func (C *cpuinfos) Cpuinfo() (cpuinfo *cpuinfos) {
 

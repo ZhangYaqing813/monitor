@@ -6,9 +6,17 @@ import (
 	"monitor/email"
 	"monitor/mod"
 	_ "net/smtp"
+	"time"
 )
 
 func main() {
+
+	go func() {
+		for true {
+			time.Sleep(300 * time.Second)
+
+		}
+	}()
 
 	hosts := mod.Monitor{}
 
@@ -46,4 +54,5 @@ func main() {
 	if err != nil {
 		fmt.Println("email send failed ,", err)
 	}
+
 }
