@@ -6,28 +6,19 @@ import (
 	"monitor/email"
 	"monitor/mod"
 	_ "net/smtp"
+	"sync"
 	"time"
 )
 
+var wg sync.WaitGroup
+
 func main() {
 	health()
-	system()
-
-	//go func() {
-	//	//time.Sleep(60*time.Second)
-	//	health()
-	//}()
-	//
-	//go func() {
-	//	//time.Sleep(60*time.Second)
-	//
-	//}()
-	//time.Sleep(15*time.Second)
 
 }
 
 func health() {
-
+	//time.Sleep(100*time.Second)
 	mailTo := []string{
 		"zhangyaqing59@126.com",
 		//"30960425@qq.com",
@@ -81,14 +72,19 @@ func health() {
 		"<tr>\n  <td>admin</td>\n  <td>10001</td>\n  <td>" + status["admin"] + "</td>\n  <td>" + t + "</td>\n  <td>600</td>\n</tr>\n" +
 		"</table>\n\n</body>\n</html>\n"
 
-	err := email.SendMail(mailTo, subject, body)
-	if err != nil {
-		fmt.Println("email send failed ,", err)
+	for _, v := range status {
+		if v == "Failed " {
+			err := email.SendMail(mailTo, subject, body)
+			if err != nil {
+				fmt.Println("email send failed ,", err)
+			}
+		}
 	}
 
 }
 
 func system() {
+	//time.Sleep(300*time.Second)
 	hosts := mod.Monitor{}
 	cpuinfo := hosts.Cpu.Cpuinfo()
 	diskinfo := hosts.Disks.Diskinfo("/data")

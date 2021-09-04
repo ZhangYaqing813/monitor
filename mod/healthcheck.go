@@ -17,7 +17,7 @@ func HealthCheck(uri string) (s string) {
 	if err != nil {
 		// 如果uri 请求超时，则进额外行三次请求，全部超时后返回服务名称
 		for i := 0; i < 3; i++ {
-			time.Sleep(5 * time.Second)
+			time.Sleep(2 * time.Second)
 			_, err := cli.Get(uri)
 			if err != nil {
 				continue
