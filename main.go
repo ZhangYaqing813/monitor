@@ -2,37 +2,60 @@ package main
 
 import (
 	"fmt"
+	"github.com/robfig/cron/v3"
 	_ "github.com/shirou/gopsutil/host"
 	"monitor/email"
 	"monitor/mod"
 	_ "net/smtp"
-	"sync"
 	"time"
 )
 
-var wg sync.WaitGroup
-
 func main() {
-	health()
+
+	systemCrontab := cron.New()
+	systmeTask := func() {
+		system()
+	}
+	// 添加定时任务, * * * * * 是 crontab,表示每分钟执行一次
+	_, err := systemCrontab.AddFunc("* * * * *", systmeTask)
+	if err != nil {
+		fmt.Println(err)
+	}
+	// 启动定时器
+	systemCrontab.Start()
+
+	healthCrontab := cron.New()
+
+	healthTask := func() {
+		health()
+	}
+
+	_, err = healthCrontab.AddFunc("* * * * *", healthTask)
+	if err != nil {
+		fmt.Println(err)
+	}
+	healthCrontab.Start()
+
+	select {}
 
 }
 
 func health() {
-	//time.Sleep(100*time.Second)
+
 	mailTo := []string{
 		"zhangyaqing59@126.com",
 		//"30960425@qq.com",
 	}
 
 	//service : port
-	service := map[string]int{
-		"goods":     10050,
-		"message":   10040,
-		"cms":       10010,
-		"container": 10030,
-		"gateway":   10000,
-		"user":      10020,
-		"admin":     10001,
+	service := map[string]string{
+		"goods":     "http://127.0.0.1:10050",
+		"message":   "http://127.0.0.1:10040",
+		"cms":       "http://127.0.0.1:10010",
+		"container": "http://127.0.0.1:10030",
+		"gateway":   "http://127.0.0.1:10000",
+		"user":      "http://127.0.0.1:10020",
+		"admin":     "http://127.0.0.1:10001",
 	}
 
 	status := map[string]string{
@@ -49,7 +72,7 @@ func health() {
 	//测试服务是否正常，把不正常的服务记录
 	for k, v := range service {
 		//组装uri
-		uri := "http://127.0.0.1:" + string(v) + "/test/check"
+		uri := string(v) + "/test/check"
 		// 测试uri
 		t = time.Now().Format("2006-01-02 15:04:05")
 		res := mod.HealthCheck(uri)
@@ -73,18 +96,16 @@ func health() {
 		"</table>\n\n</body>\n</html>\n"
 
 	for _, v := range status {
-		if v == "Failed " {
+		if v == "Failed" {
 			err := email.SendMail(mailTo, subject, body)
 			if err != nil {
 				fmt.Println("email send failed ,", err)
 			}
 		}
 	}
-
 }
 
 func system() {
-	//time.Sleep(300*time.Second)
 	hosts := mod.Monitor{}
 	cpuinfo := hosts.Cpu.Cpuinfo()
 	diskinfo := hosts.Disks.Diskinfo("/data")
